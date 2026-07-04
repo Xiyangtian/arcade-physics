@@ -1,5 +1,6 @@
 {
     "name": "physics插件 v1.2",
+    "version": "1.0.0",
     "description": "",
     "dependencies": {
         "device": "*"
