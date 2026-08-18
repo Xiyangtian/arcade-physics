@@ -234,7 +234,7 @@ namespace physics {
             spriteJumps.push(0)
             spriteWallJumpCooldowns.push(0)
         }
-        sprite.setFlag(SpriteFlag.Ghost, true)
+        sprite.setFlag(SpriteFlag.GhostThroughWalls, true)
 
         controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             for (let i = 0; i < physicsSprites.length; i++) {
@@ -266,7 +266,7 @@ namespace physics {
     //% group="物理效果"
     export function addNoJumpPhysics(sprite: Sprite) {
         if (noJumpSprites.indexOf(sprite) == -1) noJumpSprites.push(sprite)
-        sprite.setFlag(SpriteFlag.Ghost, true)
+        sprite.setFlag(SpriteFlag.GhostThroughWalls, true)
     }
 
     scene.onHitWall(SpriteKind.Platform, function (sprite, location) {
