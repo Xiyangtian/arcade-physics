@@ -234,6 +234,7 @@ namespace physics {
             spriteJumps.push(0)
             spriteWallJumpCooldowns.push(0)
         }
+        sprite.setFlag(SpriteFlag.Ghost, true)
 
         controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             for (let i = 0; i < physicsSprites.length; i++) {
@@ -265,6 +266,7 @@ namespace physics {
     //% group="物理效果"
     export function addNoJumpPhysics(sprite: Sprite) {
         if (noJumpSprites.indexOf(sprite) == -1) noJumpSprites.push(sprite)
+        sprite.setFlag(SpriteFlag.Ghost, true)
     }
 
     scene.onHitWall(SpriteKind.Platform, function (sprite, location) {
@@ -345,7 +347,7 @@ namespace physics {
             // --- 4. DETECCIÓN DE TECHO (SUAVE) ---
             if (s.vy < 0 && !onLadder) {
                 if (checkSolid(s.x, s.top - 1, true) || checkSolid(s.left + 2, s.top - 1, true) || checkSolid(s.right - 2, s.top - 1, true)) {
-                    s.vy = 12; s.top = (Math.floor(s.top / 16) * 16) + 16
+                    s.vy = 0; s.top = (Math.floor((s.top - 1) / 16) * 16) + 16
                 }
             }
             s.vy = Math.min(s.vy, TERMINAL_VELOCITY)
