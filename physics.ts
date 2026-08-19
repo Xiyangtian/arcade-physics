@@ -34,6 +34,7 @@ namespace physics {
     let MAX_JUMPS = 1
     let spriteJumps: number[] = []
     let spriteWallJumpCooldowns: number[] = []
+    let spriteIceLaunch: boolean[] = []
 
     //% block="梯子列表"
     //% weight=-10
@@ -233,6 +234,7 @@ namespace physics {
             physicsSprites.push(sprite)
             spriteJumps.push(0)
             spriteWallJumpCooldowns.push(0)
+            spriteIceLaunch.push(false)
         }
         sprite.setFlag(SpriteFlag.GhostThroughWalls, true)
 
@@ -282,7 +284,7 @@ namespace physics {
             }
 
             let onLadder = isTileInList(s.x, s.y, ladders)
-            let onIce = isTileInList(s.x, s.bottom + 2, iceTiles)
+            let onIce = isOnIce(s)
             let onGround = s.vy >= 0 && checkSolid(s.x, s.bottom, false)
 
             // --- 1. GESTIÓN DE GRAVEDAD (SIN REBOTE EN ESCALERAS) ---
@@ -423,7 +425,7 @@ namespace physics {
             let pressingRight = controller.right.isPressed()
             let speed = controlledSpeeds[i]
             let onGround = groundedSprites.indexOf(s) != -1
-            let onIce = isTileInList(s.x, s.bottom + 2, iceTiles)
+            let onIce = isOnIce(s)
             let friction = onIce ? ICE_FRICTION : GROUND_FRICTION
 
             if (pressingLeft && pressingRight) {
@@ -436,8 +438,10 @@ namespace physics {
                 if (onGround) {
                     s.vx *= friction
                     if (Math.abs(s.vx) < 5) s.vx = 0
+                    spriteIceLaunch[idx] = isLeavingIceIntoAir(s)
                 } else {
-                    s.vx = 0
+                    if (s.vy < 0 || !spriteIceLaunch[idx]) s.vx = 0
+                    // 否则：从冰面滑向空中且 vy >= 0，保持 vx 顺势飞出
                 }
             }
         }
@@ -448,6 +452,30 @@ namespace physics {
         if (col < 0 || row < 0) return false
         let t = tiles.getTileAt(col, row)
         return t && list.indexOf(t) != -1
+    }
+
+    export function isLeavingIceIntoAir(sprite: Sprite): boolean {
+        if (!isOnIce(sprite)) return false
+        if (Math.abs(sprite.vx) < 1) return false
+        let checkX = sprite.vx > 0 ? sprite.right + 2 : sprite.left - 2
+        // 梯子、单向墙不算空中，保持原逻辑
+        if (isTileInList(checkX, sprite.bottom, ladders)) return false
+        return !checkSolid(checkX, sprite.bottom, false)
+    }
+
+    export function isOnIce(sprite: Sprite): boolean {
+        // 检测精灵 hitbox 底部附近覆盖到的所有图块
+        let leftCol = Math.floor(sprite.left / 16)
+        let rightCol = Math.floor(sprite.right / 16)
+        let bottomRow = Math.floor((sprite.bottom + 2) / 16)
+        for (let col = leftCol; col <= rightCol; col++) {
+            for (let row = bottomRow - 1; row <= bottomRow; row++) {
+                if (row < 0) continue
+                let t = tiles.getTileAt(col, row)
+                if (t && iceTiles.indexOf(t) != -1) return true
+            }
+        }
+        return false
     }
 
     export function checkSolid(x: number, y: number, ignoreSemi: boolean): boolean {
